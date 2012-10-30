@@ -82,6 +82,33 @@ def init_pkg(pkg, repo_dest):
                long_description='',
         """ % vars)
 
+        patch("""\
+        diff --git a/puppet/manifests/classes/playdoh.pp b/puppet/manifests/classes/playdoh.pp
+        index 7f027b7..b370a42 100644
+        --- a/puppet/manifests/classes/playdoh.pp
+        +++ b/puppet/manifests/classes/playdoh.pp
+        @@ -3,16 +3,16 @@
+
+         # TODO: Make this rely on things that are not straight-up exec.
+         class playdoh {
+        -    file { "$PROJ_DIR/project/settings/local.py":
+        +    file { "$PROJ_DIR/%(pkg)s/settings/local.py":
+                 ensure => file,
+        -        source => "$PROJ_DIR/project/settings/local.py-dist",
+        +        source => "$PROJ_DIR/%(pkg)s/settings/local.py-dist",
+                 replace => false;
+             }
+
+             exec { "create_mysql_database":
+                 command => "mysql -uroot -B -e'CREATE DATABASE $DB_NAME CHARACTER SET utf8;'",
+                 unless  => "mysql -uroot -B --skip-column-names -e 'show databases' | /bin/grep '$DB_NAME'",
+        -        require => File["$PROJ_DIR/project/settings/local.py"]
+        +        require => File["$PROJ_DIR/%(pkg)s/settings/local.py"]
+             }
+
+             exec { "grant_mysql_database":
+        """ % vars)
+
         git(['mv', 'project', pkg])
         git(['commit', '-a', '-m', 'Renamed project module to %s' % pkg])
 
